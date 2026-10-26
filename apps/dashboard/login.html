@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#DCDFE9">
+<link rel="icon" type="image/png" href="/assets/icons/favicon.png">
+<link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/css/steady.css?v=1">
+<link rel="stylesheet" href="/assets/css/app.css?v=1">
+<meta name="description" content="Sign in to Steady — Insights dashboard.">
+<title>Sign in — Steady Insights dashboard</title>
+</head>
+<body class="site-login">
+<div class="login-shell">
+  <section class="login-hero">
+    <div class="brand"><a href="/" aria-label="All Steady apps"><img class="logo" src="/assets/img/logo.png" alt="Steady" style="height:34px"></a><span class="pill" style="margin-left:6px">Insights</span></div>
+    <img class="ill" src="/assets/img/ill_map.png" alt="" decoding="async">
+    <h1 class="h1">What the program achieves, as it happens.</h1>
+    <p class="sub" style="font-size:15px;max-width:460px">KPIs, demand and capacity by area, gross and net savings with counterfactual statuses, outcomes, planning scenarios and an audit log, all computed from the live shared dataset.</p>
+    <div class="meta"><span class="badge verified nodot">Live shared data</span><span class="badge demo nodot">Prototype · simulated records</span></div>
+  </section>
+  <section class="login-card">
+    <div><span class="eyebrow">Government Insights</span><h2 class="h2" style="margin-top:4px">Sign in</h2></div>
+    <div id="err" class="note login-note" hidden role="alert"></div>
+    <form id="login" novalidate>
+      <div class="field"><label for="email">Email</label><input id="email" name="email" class="input" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com" required></div>
+      <div class="field"><label for="password">Password</label><div class="pwwrap"><input id="password" name="password" class="input" type="password" autocomplete="current-password" required><button type="button" id="togglepw" aria-label="Show password">Show</button></div></div>
+      <button class="btn primary block lg" type="submit">Sign in</button>
+    </form>
+    <p class="tiny">Access is provisioned by the program administrator. Your access level (viewer, analyst or administrator) is set on your account.</p>
+    <details class="demo-accounts">
+      <summary>Demo accounts <span class="tiny">(password: steady-demo)</span></summary>
+      <button type="button" class="acct" data-demo-email="analyst@steady.demo" data-demo-password="steady-demo"><img src="/assets/img/av19.png" alt="" loading="lazy"><span><b>Program analyst</b><span>Filter, compare and export</span></span></button><button type="button" class="acct" data-demo-email="viewer@steady.demo" data-demo-password="steady-demo"><img src="/assets/img/av20.png" alt="" loading="lazy"><span><b>Program viewer</b><span>Approved standard report only</span></span></button><button type="button" class="acct" data-demo-email="admin@steady.demo" data-demo-password="steady-demo"><img src="/assets/img/av22.png" alt="" loading="lazy"><span><b>Program administrator</b><span>Edit assumptions, view as any role</span></span></button>
+    </details>
+    <div class="login-foot"><span>Aggregated figures only; small groups are suppressed.</span><div class="login-switch"><a href="/couchsurfer/login">Couch Surfer app</a><a href="/host/login">Host app</a></div></div>
+  </section>
+</div>
+<script src="/assets/js/steady-login.js?v=1"></script>
+<script>SteadyLogin.init({ app: 'dashboard' });</script>
+</body>
+</html>

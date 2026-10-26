@@ -1,0 +1,6 @@
+# runtime data (accounts, sessions, the live dataset)
+server/data/*.json
+server/data/*.tmp
+node_modules/
+.DS_Store
+npm-debug.log*

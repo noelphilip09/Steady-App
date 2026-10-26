@@ -1,0 +1,16 @@
+{
+  "name": "steady-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Steady: dignity-centred housing stability platform. Couch Surfer app, Host app and Government Insights dashboard, each with its own sign-in, sharing one live dataset.",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch-path=server server/index.js",
+    "seed": "node server/seed.js",
+    "users": "node server/users.js",
+    "check": "node --check server/index.js && node --check shared/js/core.js && node --check shared/js/runtime.js && node --check shared/js/steady-live.js && node --check shared/js/steady-boot.js && node --check shared/js/steady-login.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "UNLICENSED"
+}

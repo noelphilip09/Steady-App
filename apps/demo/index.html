@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#DCDFE9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="icon" type="image/png" href="/assets/icons/favicon.png">
+<link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="/assets/css/steady.css?v=1">
+<link rel="stylesheet" href="/assets/css/site.css?v=1">
+<link rel="stylesheet" href="/assets/css/app.css?v=1">
+<meta name="description" content="Steady — Connected demo (all three apps). Dignity-centred housing stability platform (demo data).">
+<title>Steady — Connected demo (all three apps)</title>
+
+<link rel="preload" href="/assets/js/preact.min.js?v=1" as="script">
+<link rel="preload" href="/assets/js/core.js?v=1" as="script">
+<link rel="preload" href="/assets/js/runtime.js?v=1" as="script">
+<link rel="preload" href="/assets/js/steady-live.js?v=1" as="script">
+<link rel="preload" href="tpl.json?v=1" as="fetch" crossorigin="use-credentials">
+
+</head>
+<body class="site-bench">
+<div id="skeleton" class="boot-skeleton" aria-hidden="true"><div class="sk-label"><span class="spin"></span> Loading the connected demo…</div></div>
+<div id="app"></div>
+<script src="/assets/js/steady-boot.js?v=1"></script>
+<script>SteadyBoot.start({ app: 'dashboard', mode: 'bench', template: 'tpl.json', v: '1' });</script>
+</body>
+</html>
