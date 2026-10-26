@@ -106,4 +106,32 @@ server/
 
 ## Deploying
 
-Any Node host works (Render, Railway, Fly.io, a VPS): run `npm start`, set `PORT` if the platform requires it, and mount a persistent volume at `STEADY_DATA_DIR` so accounts and records survive restarts. Behind a TLS-terminating proxy, pass `X-Forwarded-Proto` so cookies are marked `Secure`. To give each app its own hostname, point three hostnames at the same server and link to `/couchsurfer/`, `/host/` and `/dashboard/`.
+The server is plain Node with no build step, so any Node or Docker host works. Set `PORT` if the platform requires it, and give `STEADY_DATA_DIR` a persistent disk so accounts and records survive restarts. Behind a TLS-terminating proxy (every platform below), cookies are marked `Secure` automatically from `X-Forwarded-Proto`.
+
+### Render (one click, free tier)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/noelphilip09/Steady-App)
+
+1. Click the button and sign in to Render with GitHub. It reads `render.yaml` and creates the `steady-app` web service.
+2. Wait for the first deploy (about two minutes). Your apps are at `https://steady-app.onrender.com/couchsurfer/`, `/host/` and `/dashboard/` (Render may add a suffix to the name).
+
+Free-tier notes: the service sleeps after 15 minutes without traffic and takes 30 to 60 seconds to wake; the filesystem is ephemeral, so accounts created in the apps and any changes to the shared records reset on each restart or deploy (demo accounts are re-seeded). For persistence, switch the plan to Starter and enable the disk block in `render.yaml`.
+
+### Fly.io (persistent volume)
+
+```bash
+fly launch --copy-config --no-deploy
+fly volumes create steady_data --size 1
+fly deploy
+```
+
+### Docker (any VPS)
+
+```bash
+docker build -t steady-app .
+docker run -d --name steady -p 80:8787 -v steady-data:/data steady-app
+```
+
+Railway, Koyeb and similar hosts pick up the `Dockerfile` or `Procfile` automatically; add a volume and point `STEADY_DATA_DIR` at it.
+
+To give each app its own hostname, point three hostnames at the same service and link to `/couchsurfer/`, `/host/` and `/dashboard/`.

@@ -1,0 +1,26 @@
+# Render Blueprint: https://render.com/deploy?repo=https://github.com/noelphilip09/Steady-App
+# Free plan: the filesystem is ephemeral, so accounts created in the apps and any changes to the
+# shared records reset whenever the service restarts or redeploys (demo accounts are re-seeded).
+# For persistence, change plan to "starter" and uncomment the disk block below.
+services:
+  - type: web
+    name: steady-app
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: echo "no build step"
+    startCommand: node server/index.js
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: STEADY_DATA_DIR
+        value: /opt/render/project/src/server/data
+      # - key: STEADY_DEMO_PASSWORD
+      #   value: choose-a-password
+    # disk:
+    #   name: steady-data
+    #   mountPath: /var/data
+    #   sizeGB: 1
+    # (with a disk, set STEADY_DATA_DIR to /var/data)
