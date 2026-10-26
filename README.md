@@ -1,5 +1,7 @@
 # Steady — housing stability platform
 
+**Live:** <https://steady-app-pm0y.onrender.com> · [Couch Surfer](https://steady-app-pm0y.onrender.com/couchsurfer/) · [Host](https://steady-app-pm0y.onrender.com/host/) · [Dashboard](https://steady-app-pm0y.onrender.com/dashboard/) (Render free tier: first visit after a quiet spell takes up to a minute to wake).
+
 Three apps for a dignity-centred housing stability program in Sydney, each with its own sign-in and URL, all working on **one live, shared dataset**:
 
 | App | URL | Sign-in | Who |
