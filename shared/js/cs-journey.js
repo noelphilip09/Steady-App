@@ -346,7 +346,7 @@
       };
 
       /* home */
-      var contrib = this.contributions(); var hs = this.housingSteps(); var ach = this.achievements(); var cur = out.cur || {};
+      var contrib = this.contributions(); var hs = this.housingSteps(); var ach = this.achievements(); var cur = out.cur || this.curVals() || {};
       var lrs = (db.learning || []).filter(function (l) { return l.participantId === self.csId(); }); var inProgress = lrs.filter(function (l) { return !!l.courseId && l.status !== 'none'; });
       var areaName = f.s_area && f.s_area !== 'any' && AREA_BY[f.s_area] ? AREA_BY[f.s_area].name : 'Anywhere in Sydney';
       out.hm = {

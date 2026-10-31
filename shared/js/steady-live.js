@@ -22,7 +22,8 @@
       this.rev = state.rev || 0; this.snapshot(state.db, state.dayOffset);
       this.setStatus('live'); this.listen();
       if (typeof document !== 'undefined') document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') self.resync(); });
-      global.addEventListener('online', function () { self.resync(); });
+      global.addEventListener('online', function () { self.resync(true); });
+      if (!this.verifyTimer && typeof setInterval === 'function') this.verifyTimer = setInterval(function () { self.verify(); }, 45000);
     },
     snapshot: function (db, dayOffset) { var j = {}; for (var k in db) j[k] = JSON.stringify(db[k]); this.lastJson = j; this.lastDb = db; this.lastOffset = dayOffset == null ? 0 : dayOffset; },
     setStatus: function (s) { if (this.status === s) return; this.status = s; if (this.logic) this.logic.setState(function (st) { return { live: Object.assign({}, st.live || {}, { status: s }) }; }); },
@@ -30,7 +31,7 @@
       var self = this; if (this.es) { try { this.es.close(); } catch (e) {} }
       if (typeof EventSource === 'undefined') return;
       var es = new EventSource('/api/' + this.app + '/events'); this.es = es;
-      es.addEventListener('hello', function (e) { var d = JSON.parse(e.data); if (d.rev !== self.rev) self.resync(); self.setStatus('live'); });
+      es.addEventListener('hello', function (e) { var d = JSON.parse(e.data); if (d.rev !== self.rev) self.resync(true); self.setStatus('live'); });
       es.addEventListener('patch', function (e) { self.onPatch(JSON.parse(e.data)); });
       es.addEventListener('reset', function (e) { self.onReset(JSON.parse(e.data)); });
       es.addEventListener('presence', function (e) { var d = JSON.parse(e.data); if (self.logic) self.logic.setState(function (st) { return { live: Object.assign({}, st.live || {}, { clients: d.clients }) }; }); });
@@ -74,8 +75,9 @@
         self.logic.toast('success', 'Demo data was reset to the seeded scenario');
       });
     },
-    resync: function () {
+    resync: function (force) {
       var self = this; if (!this.logic || this.guest) return;
+      var now = Date.now(); if (!force && now - (this.lastResync || 0) < 8000) return; this.lastResync = now;
       this.api('GET', '/state').then(function (r) {
         if (r.status === 401) { self.toLogin(); return; }
         if (!r.ok) return;
@@ -83,6 +85,18 @@
         self.rev = r.data.rev; self.snapshot(r.data.db, r.data.dayOffset);
         self.logic.setState({ db: r.data.db, dayOffset: r.data.dayOffset || 0 }); self.setStatus('live');
       }).catch(function () { self.setStatus('offline'); });
+    },
+    /* ---- periodic consistency check: if the server's copy differs from what this client believes it has, take the server's ---- */
+    verify: function () {
+      var self = this; if (!this.logic || this.guest || this.pushing || this.pushTimer) return;
+      this.api('GET', '/state').then(function (r) {
+        if (!r.ok || !self.logic) return; var db = r.data.db; var drift = []; var patch = {};
+        for (var k in db) { var j = JSON.stringify(db[k]); if (j !== self.lastJson[k]) { drift.push(k); patch[k] = db[k]; self.lastJson[k] = j; } }
+        self.rev = r.data.rev;
+        if (!drift.length) return;
+        console.warn('Steady: local copy drifted from the server for ' + drift.join(', ') + '; taking the server\u2019s version');
+        self.logic.setState(function (st) { return { db: Object.assign({}, st.db, patch), dayOffset: r.data.dayOffset || 0 }; }); self.lastDb = null; self.lastOffset = r.data.dayOffset || 0;
+      }).catch(function () {});
     },
     /* ---- push local changes: only the top-level collections whose content actually changed ---- */
     schedulePush: function () { var self = this; if (this.guest || !this.logic) return; clearTimeout(this.pushTimer); this.pushTimer = setTimeout(function () { self.push(); }, 120); },

@@ -9,6 +9,7 @@
   function iff(cond) { return { 'if': cond, c: kids(arguments, 1) }; }
   function each(list, as) { return { 'for': list, as: as, c: kids(arguments, 2) }; }
   function group() { return { 'if': 'true', c: kids(arguments, 0) }; }
+  S.tpl = { el: el, v: v, iff: iff, each: each, group: group, kids: kids };
   var SVG = { width: '20', height: '20', viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'aria-hidden': 'true' };
   var PATHS = {
     back: 'm15 6-6 6 6 6', fwd: 'm9 6 6 6-6 6', check: 'm5 12 5 5 9-10', play: 'M8 5v14l11-7z', home: 'M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z',
@@ -17,18 +18,24 @@
     cal: 'M3 5h18v16H3zM3 10h18M8 3v4M16 3v4', clock: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 4v5l3 2', house: 'M3 11l9-8 9 8v9a2 2 0 0 1-2 2h-4v-7H9v7H5a2 2 0 0 1-2-2z', flag: 'M5 21V4h11l-1.5 4L16 12H5', spark: 'M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1',
     heart: 'M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z', shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z', ext: 'M14 4h6v6M20 4l-9 9M5 8v11h11', phone: 'M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z'
   };
+  S.tpl.PATHS = PATHS;
   function icon(name, size, extra) { var a = Object.assign({}, SVG, extra || {}); if (size) { a.width = String(size); a.height = String(size); } return el('svg', a, el('path', { d: PATHS[name] })); }
+  S.tpl.icon = icon;
   function checkSvg() { return el('svg', { viewBox: '0 0 24 24', 'aria-hidden': 'true' }, el('path', { d: PATHS.check })); }
   function chk(checkedPath, onChange, label, extraCls) { return el('label', { 'class': 'chk ' + (extraCls || 'green') }, el('input', { type: 'checkbox', checked: v(checkedPath), onChange: v(onChange) }), el('span', { 'class': 'box' }, checkSvg()), el('span', {}, label)); }
+  S.tpl.checkSvg = checkSvg; S.tpl.chk = chk;
   function field(id, label, attrs, type) { return el('div', { 'class': 'field' }, el('label', { 'for': id }, label), el(type === 'textarea' ? 'textarea' : 'input', Object.assign({ id: id, 'class': type === 'textarea' ? 'textarea' : ['input ', v('ob2.inv.' + id)], name: id, value: v('f.' + id), onChange: v('onField') }, attrs || {}))); }
   function gIcon() { return el('svg', { 'class': 'g', viewBox: '0 0 48 48', 'aria-hidden': 'true' }, el('path', { fill: '#EA4335', d: 'M24 9.5c3.5 0 6.6 1.2 9.1 3.5l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z' }), el('path', { fill: '#4285F4', d: 'M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.4-4.6 7.1l7.5 5.8c4.4-4 6.8-10 6.8-17.4z' }), el('path', { fill: '#FBBC05', d: 'M10.5 28.6A14.5 14.5 0 0 1 9.7 24c0-1.6.3-3.1.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z' }), el('path', { fill: '#34A853', d: 'M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z' })); }
+  S.tpl.field = field; S.tpl.gIcon = gIcon;
   function h1(t, sub) { return el('div', {}, el('h1', { 'class': 'h1' }, t), sub ? el('p', { 'class': 'sub' }, sub) : null); }
   function h2(t, sub) { return el('div', {}, el('h2', { 'class': 'h2' }, t), sub ? el('p', { 'class': 'sub', style: 'margin-top: 4px' }, sub) : null); }
   function bar(pctPath, cls) { return el('div', { 'class': 'bar ' + (cls || '') }, el('i', { style: ['width: ', v(pctPath), '%'] })); }
   function ring(pctPath, dashPath, cls) { return el('div', { 'class': 'ring ' + (cls || '') }, el('svg', { viewBox: '0 0 84 84', 'aria-hidden': 'true' }, el('circle', { 'class': 'bg', cx: '42', cy: '42', r: '34' }), el('circle', { 'class': 'fg', cx: '42', cy: '42', r: '34', 'stroke-dasharray': '213.6', 'stroke-dashoffset': v(dashPath) })), el('div', { 'class': 'txt' }, v(pctPath), '%')); }
+  S.tpl.h1 = h1; S.tpl.h2 = h2; S.tpl.bar = bar; S.tpl.ring = ring;
   function backBtn(action) { return el('button', { 'class': 'btn ghost sm', style: 'align-self: flex-start; margin-left: -12px', onClick: v(action) }, icon('back', 18), 'Back'); }
   function skeletonCards() { return el('div', { 'class': 'stack' }, el('div', { 'class': 'skcard' }, el('div', { 'class': 'sk', style: 'height: 150px' }), el('div', { 'class': 'sk', style: 'height: 18px; width: 70%' }), el('div', { 'class': 'sk', style: 'height: 14px; width: 45%' })), el('div', { 'class': 'skcard' }, el('div', { 'class': 'sk', style: 'height: 150px' }), el('div', { 'class': 'sk', style: 'height: 18px; width: 60%' }), el('div', { 'class': 'sk', style: 'height: 14px; width: 50%' }))); }
 
+  S.tpl.backBtn = backBtn; S.tpl.skeletonCards = skeletonCards;
   /* ---------------- onboarding ---------------- */
   var pickCard = function (as, extraCls, withSub) { return el('button', { 'class': ['pick ' + (extraCls || '') + ' ', v(as + '.on')], onClick: v(as + '.pick'), 'aria-pressed': v(as + '.on') }, el('span', { 'class': 'ic' }, el('img', { src: v(as + '.img'), alt: '' })), el('span', { 'class': 'nm' }, v(as + '.label')), withSub ? el('span', { 'class': 'sm' }, v(as + '.sub')) : null); };
   S.slots.csOnboarding = iff('csS.onboard',
@@ -89,7 +96,7 @@
         el('p', { 'class': 'tiny' }, v('ob2.areaCount'), ' selected'))),
       iff('ob2.sEducation', el('div', { 'class': 'stack' },
         h2('Study and learning', 'Education is part of Steady. Where are you up to?'),
-        el('div', { 'class': 'pick-grid three' }, each('ob2.eduStatus', 'x', pickCard('x', '', false))),
+        el('div', { 'class': 'pick-grid' }, each('ob2.eduStatus', 'x', pickCard('x', '', false))),
         iff('ob2.asksInterest', el('div', { 'class': 'card soft stack tight pop' }, el('div', { 'class': 'h4' }, 'Interested in studying?'), el('div', { 'class': 'chips' }, each('ob2.interest', 'i', el('button', { 'class': ['chip ', v('i.on')], onClick: v('i.pick') }, v('i.label')))))),
         iff('ob2.asksPathway', el('div', { 'class': 'stack tight pop' }, el('div', { 'class': 'h4' }, 'Which pathway appeals most?'), el('div', { 'class': 'pick-grid' }, each('ob2.pathways', 'p', pickCard('p', '', true))))),
         el('p', { 'class': 'tiny' }, 'No pressure. You can explore courses and short videos in the app whenever you like.'))),
@@ -112,7 +119,8 @@
     el('div', { 'class': 'goal-row' },
       el('button', { 'class': 'goal', onClick: v('csGoHousing') }, el('span', { 'class': 'ic house' }, icon('house', 18)), el('span', { 'class': 'nm' }, 'Housing goals'), el('span', { 'class': 'sm' }, v('hm.housing.sub')), bar('hm.housing.pct', 'thin')),
       el('button', { 'class': 'goal', onClick: v('csGoEducation') }, el('span', { 'class': 'ic edu' }, icon('learn', 18)), el('span', { 'class': 'nm' }, 'Education goals'), el('span', { 'class': 'sm' }, v('hm.edu.sub'))),
-      el('button', { 'class': 'goal', onClick: v('csGoMilestones') }, el('span', { 'class': 'ic flag' }, icon('flag', 18)), el('span', { 'class': 'nm' }, 'Milestones'), el('span', { 'class': 'sm' }, v('hm.ms.sub')), bar('hm.ms.pct', 'thin green'))),
+      el('button', { 'class': 'goal', onClick: v('csGoMilestones') }, el('span', { 'class': 'ic flag' }, icon('flag', 18)), el('span', { 'class': 'nm' }, 'Milestones'), el('span', { 'class': 'sm' }, v('hm.ms.sub')), bar('hm.ms.pct', 'thin green')),
+      el('button', { 'class': 'goal', onClick: v('csGoSavings') }, el('span', { 'class': 'ic save' }, icon('spark', 18)), el('span', { 'class': 'nm' }, 'Savings'), el('span', { 'class': 'sm' }, v('hm.savings'), ' available'), el('span', { 'class': 'sm' }, v('hm.savingsSub')))),
     el('div', { 'class': 'card stack', style: 'border-color: var(--blue-tint2)' },
       el('div', { 'class': 'row between' }, el('span', { 'class': 'eyebrow' }, 'Your next step'), iff('ns.postponed', el('span', { 'class': 'pill amber' }, 'Postponed'))),
       el('div', { 'class': 'h3' }, v('ns.title')),
@@ -120,7 +128,7 @@
       el('div', { 'class': 'btnrow' }, el('button', { 'class': 'btn primary sm', onClick: v('ns.go') }, v('ns.cta')), el('button', { 'class': 'btn outline sm', onClick: v('ns.done') }, 'Mark done'), el('button', { 'class': 'btn ghost sm', onClick: v('ns.later') }, 'Later'))),
     el('div', { 'class': 'quick' },
       el('button', { 'class': 'card-btn', onClick: v('csGoPassport') }, el('span', { 'class': 'eyebrow' }, 'Rental Passport'), el('span', { 'class': 'val' }, v('pp.verifiedStays')), el('span', { 'class': 'lab' }, 'verified stays · ', v('pp.refs'), ' references')),
-      el('button', { 'class': 'card-btn', onClick: v('csGoSavings') }, el('span', { 'class': 'eyebrow' }, 'Savings'), el('span', { 'class': 'val' }, v('hm.savings')), el('span', { 'class': 'lab' }, v('hm.savingsSub'))),
+      el('button', { 'class': 'card-btn', onClick: v('csGoBudget') }, el('span', { 'class': 'eyebrow' }, 'Budget runway'), el('span', { 'class': 'val' }, v('bg.runwayShort')), el('span', { 'class': 'lab' }, 'income, spending and your bond goal')),
       el('button', { 'class': 'card-btn', onClick: v('csGoPathways') }, el('span', { 'class': 'eyebrow' }, 'Pathways'), el('span', { 'class': 'val' }, v('savedOppCount')), el('span', { 'class': 'lab' }, 'saved · study, work, support')),
       el('button', { 'class': 'card-btn', onClick: v('csGoHelp') }, el('span', { 'class': 'eyebrow' }, 'Help and safety'), el('span', { 'class': 'val' }, '24/7'), el('span', { 'class': 'lab' }, 'support, reports, emergencies'))));
 
@@ -233,7 +241,7 @@
   /* ---------------- savings ---------------- */
   S.slots.csSavings = iff('csS.savings', el('div', { 'class': 'stack screen' },
     backBtn('csGoMore'),
-    h1('Savings', 'Built from the weekly program contribution. Yours to keep and redeem whenever you need.'),
+    h1('Savings', 'A$20 of every weekly contribution you make is saved for you. Yours to keep and redeem whenever you need.'),
     el('div', { 'class': 'card dark stack tight' },
       el('span', { 'class': 'eyebrow', style: 'color: rgba(255,255,255,.6)' }, 'Available balance'),
       el('div', { 'class': 'bigmoney' }, v('sv.available')),
@@ -244,14 +252,14 @@
       el('div', { 'class': 'row between' }, el('span', { 'class': 'h4' }, 'Every week of a stay'), el('span', { 'class': 'h4' }, v('sv.weekly'))),
       el('div', { 'class': 'split' }, el('i', { 'class': 'svc' }), el('i', { 'class': 'you' })),
       el('div', { 'class': 'split-leg' }, el('span', { 'class': 'svc' }, v('sv.svc'), ' Steady service'), el('span', { 'class': 'you' }, v('sv.sav'), ' your savings')),
-      el('p', { 'class': 'small' }, 'The program contributes ', el('b', {}, v('sv.weekly')), ' for each week you are in a Steady stay. ', el('b', {}, v('sv.svc')), ' pays for Steady’s service and support; it is not your money. ', el('b', {}, v('sv.sav')), ' goes into your savings and is yours.'),
+      el('p', { 'class': 'small' }, 'For each week you are in a Steady stay you pay ', el('b', {}, v('sv.weekly')), '. ', el('b', {}, v('sv.svc')), ' is Steady\u2019s service fee. ', el('b', {}, v('sv.sav')), ' goes straight into your savings and stays yours. The first week is paid when your host accepts; after that, weekly.'),
       el('div', { 'class': 'kv' }, el('span', {}, 'Credited to your savings so far'), el('b', {}, v('sv.total'))),
       el('div', { 'class': 'kv' }, el('span', {}, 'Steady service contributions'), el('b', {}, v('sv.service'))),
       el('div', { 'class': 'kv' }, el('span', {}, 'Redeemed or accessed'), el('b', {}, v('sv.redeemed')))),
     el('div', { 'class': 'card stack tight' },
       el('div', { 'class': 'h4' }, 'Weekly contribution history'),
       iff('sv.hasHistory', each('sv.history', 'h', el('div', { 'class': 'contrib' }, el('span', { 'class': 'wk' }, v('h.week')), el('div', {}, el('div', { 'class': 'small ink strong' }, v('h.stay')), el('div', { 'class': 'tiny' }, v('h.date'), ' · ', v('h.svc'))), el('div', { 'class': 'amt good' }, v('h.you'), el('small', {}, v('h.status')))))),
-      iff('sv.noHistory', el('div', { 'class': 'empty' }, el('div', { 'class': 'h4' }, 'No contributions yet'), el('p', { 'class': 'small' }, 'They start the week your host confirms check-in.')))),
+      iff('sv.noHistory', el('div', { 'class': 'empty' }, el('div', { 'class': 'h4' }, 'No contributions yet'), el('p', { 'class': 'small' }, 'Your first weekly contribution is paid when a host accepts your request.')))),
     iff('sv.hasTx', el('div', { 'class': 'card stack tight' }, el('div', { 'class': 'h4' }, 'Redemptions and emergency access'), each('sv.tx', 't', el('div', { 'class': 'list-item' }, el('div', { 'class': 'grow' }, el('div', { 'class': 'small ink strong' }, v('t.label')), el('div', { 'class': 'tiny' }, v('t.when'))), el('span', { 'class': ['badge nodot ', v('t.cls')] }, v('t.status')), el('b', { 'class': 'money' }, v('t.amount')))))),
     el('div', { 'class': 'note' }, el('b', {}, 'In an emergency: '), 'ask for expedited access and we release what you need the same day where possible. If you need more than your savings, Steady connects you with a support agency.')));
 
@@ -307,10 +315,11 @@
     el('div', { 'class': 'h4' }, 'How the weekly contribution works'),
     el('div', { 'class': 'split' }, el('i', { 'class': 'svc' }), el('i', { 'class': 'you' })),
     el('div', { 'class': 'split-leg' }, el('span', { 'class': 'svc' }, 'A$30 Steady service'), el('span', { 'class': 'you' }, 'A$20 your savings')),
-    el('div', { 'class': 'kv' }, el('span', {}, 'Each stay week'), el('b', {}, 'A$50 program contribution')),
+    el('div', { 'class': 'kv' }, el('span', {}, 'Each stay week you pay'), el('b', {}, 'A$50')),
+    el('div', { 'class': 'kv' }, el('span', {}, 'Steady service fee over this stay'), el('b', {}, v('rqServiceEstimate'))),
     el('div', { 'class': 'kv' }, el('span', {}, 'Your savings over this stay'), el('b', { 'class': 'good' }, v('rqSavingsEstimate'))),
-    el('div', { 'class': 'kv' }, el('span', {}, 'You pay'), el('b', {}, 'Nothing. No rent, no fees.')),
-    el('p', { 'class': 'tiny' }, 'Nothing starts until your host confirms check-in. Savings are yours to redeem any time.'));
+    el('div', { 'class': 'kv' }, el('span', {}, 'Rent to the host'), el('b', {}, 'None')),
+    el('p', { 'class': 'tiny' }, 'Nothing is charged when you send a request. Once your host accepts you have 24 hours to pay the first week, then it is weekly during the stay. Savings are yours to redeem any time.'));
 
   /* ---------------- modals ---------------- */
   S.slots.csModals = group(
