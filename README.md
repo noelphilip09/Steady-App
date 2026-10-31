@@ -129,6 +129,8 @@ The server is plain Node with no build step, so any Node or Docker host works. S
 1. Click the button and sign in to Render with GitHub. It reads `render.yaml` and creates the `steady-app` web service.
 2. Wait for the first deploy (about two minutes). Your apps are at `https://steady-app.onrender.com/couchsurfer/`, `/host/` and `/dashboard/` (Render may add a suffix to the name).
 
+Pushes to `main` deploy automatically through [`.github/workflows/render-deploy.yml`](.github/workflows/render-deploy.yml), which calls the Render API and waits for the deploy to go live. It needs a `RENDER_API_KEY` repository secret (Render dashboard → Account Settings → API Keys); if you create your own service, change `RENDER_SERVICE_ID` and `SITE_URL` at the top of the workflow.
+
 Free-tier notes: the service sleeps after 15 minutes without traffic and takes 30 to 60 seconds to wake; the filesystem is ephemeral, so accounts created in the apps and any changes to the shared records reset on each restart or deploy (demo accounts are re-seeded). For persistence, switch the plan to Starter and enable the disk block in `render.yaml`.
 
 ### Fly.io (persistent volume)
