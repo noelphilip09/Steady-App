@@ -122,7 +122,9 @@
       this.toast('info', 'Booking released: the payment window passed.');
     };
     var _didMount = P.componentDidMount;
-    P.componentDidMount = function () { var self = this; if (_didMount) _didMount.call(this); if (this.mode() === 'cs' && typeof setInterval === 'function') this._payTimer = setInterval(function () { var ps = self.payState(); if (!ps || ps.paid) return; if (ps.expired) { if (!ps.stay.expiredAt) self.expireUnpaid(ps.stay); return; } self.setState({ cs: Object.assign({}, self.state.cs, { payTick: Date.now() }) }); }, 1000); };
+    /* instant approval also catches up: a request left pending (page closed before approval) is approved on the next load */
+    P.catchUpApprovals = function () { var self = this; if (this.mode() !== 'cs' || this.isGuest()) return; if (this.currentStay()) return; var pend = this.myRequests().filter(function (r) { return r.status === 'pending' && r.id !== 'rq_sam'; }).sort(function (a, b) { return b.at - a.at; }); if (pend.length) this.autoAccept(pend[0].id); };
+    P.componentDidMount = function () { var self = this; if (_didMount) _didMount.call(this); if (this.mode() === 'cs') this.later(function () { self.catchUpApprovals(); }, 1800); if (this.mode() === 'cs' && typeof setInterval === 'function') this._payTimer = setInterval(function () { var ps = self.payState(); if (!ps || ps.paid) return; if (ps.expired) { if (!ps.stay.expiredAt) self.expireUnpaid(ps.stay); return; } self.setState({ cs: Object.assign({}, self.state.cs, { payTick: Date.now() }) }); }, 1000); };
     var _unmount = P.componentWillUnmount;
     P.componentWillUnmount = function () { if (this._payTimer) clearInterval(this._payTimer); if (_unmount) _unmount.call(this); };
 
