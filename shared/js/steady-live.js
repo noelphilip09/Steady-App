@@ -66,9 +66,9 @@
       return false;
     },
     onReset: function (msg) {
-      var self = this;
+      var self = this; var rev0 = this.rev;
       this.api('GET', '/state').then(function (r) {
-        if (!r.ok) return;
+        if (!r.ok) return; if (r.data.rev < rev0) return;
         self.rev = r.data.rev; self.snapshot(r.data.db, r.data.dayOffset);
         self.logic.animTargets = {}; self.logic.tw = {};
         self.logic.setState({ db: r.data.db, dayOffset: r.data.dayOffset || 0, modal: null });
@@ -78,9 +78,11 @@
     resync: function (force) {
       var self = this; if (!this.logic || this.guest) return;
       var now = Date.now(); if (!force && now - (this.lastResync || 0) < 8000) return; this.lastResync = now;
+      var seq = this.changeSeq || 0, rev0 = this.rev;
       this.api('GET', '/state').then(function (r) {
         if (r.status === 401) { self.toLogin(); return; }
         if (!r.ok) return;
+        if (self.snapshotStale(seq, rev0, r.data)) { setTimeout(function () { self.resync(true); }, 2500); return; }
         if (r.data.rev === self.rev) { self.setStatus('live'); return; }
         self.rev = r.data.rev; self.snapshot(r.data.db, r.data.dayOffset);
         self.logic.setState({ db: r.data.db, dayOffset: r.data.dayOffset || 0 }); self.setStatus('live');
@@ -89,8 +91,9 @@
     /* ---- periodic consistency check: if the server's copy differs from what this client believes it has, take the server's ---- */
     verify: function () {
       var self = this; if (!this.logic || this.guest || this.pushing || this.pushTimer) return;
+      var seq = this.changeSeq || 0, rev0 = this.rev;
       this.api('GET', '/state').then(function (r) {
-        if (!r.ok || !self.logic) return; var db = r.data.db; var drift = []; var patch = {};
+        if (!r.ok || !self.logic) return; if (self.snapshotStale(seq, rev0, r.data)) return; var db = r.data.db; var drift = []; var patch = {};
         for (var k in db) { var j = JSON.stringify(db[k]); if (j !== self.lastJson[k]) { drift.push(k); patch[k] = db[k]; self.lastJson[k] = j; } }
         self.rev = r.data.rev;
         if (!drift.length) return;
@@ -99,7 +102,9 @@
       }).catch(function () {});
     },
     /* ---- push local changes: only the top-level collections whose content actually changed ---- */
-    schedulePush: function () { var self = this; if (this.guest || !this.logic) return; clearTimeout(this.pushTimer); this.pushTimer = setTimeout(function () { self.push(); }, 120); },
+    schedulePush: function () { var self = this; if (this.guest || !this.logic) return; this.changeSeq = (this.changeSeq || 0) + 1; clearTimeout(this.pushTimer); this.pushTimer = setTimeout(function () { self.pushTimer = null; self.push(); }, 120); },
+    /* a server snapshot may only replace local state if nothing changed locally while it was being fetched */
+    snapshotStale: function (seq, rev0, data) { return this.changeSeq !== seq || !!this.pushing || !!this.pushTimer || (data && data.rev < rev0); },
     push: function () {
       var self = this; if (this.pushing || this.guest || !this.logic) { if (this.pushing) this.schedulePush(); return; }
       var st = this.logic.state; var db = st.db; var patch = {}; var any = false;
