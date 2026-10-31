@@ -1,4 +1,6 @@
 /* Steady app layer: boot skeletons, lazy image fade-in, live-sync indicator, dashboard recalculation skeleton, sign-in pages. */
+/* The hidden attribute must win over layout classes such as .stack{display:flex} */
+[hidden]{display:none!important}
 
 /* ---------- boot: skeleton first, app fades in once mounted ---------- */
 #app{opacity:0;transition:opacity .45s var(--ease) .05s}
