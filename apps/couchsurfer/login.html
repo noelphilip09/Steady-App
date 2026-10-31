@@ -8,8 +8,8 @@
 <link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="/assets/css/steady.css?v=1">
-<link rel="stylesheet" href="/assets/css/app.css?v=1">
+<link rel="stylesheet" href="/assets/css/steady.css?v=3">
+<link rel="stylesheet" href="/assets/css/app.css?v=3">
 <meta name="description" content="Sign in to Steady — Couch Surfer.">
 <title>Sign in — Steady Couch Surfer</title>
 </head>
@@ -25,6 +25,14 @@
   <section class="login-card">
     <div><span class="eyebrow">Couch Surfer app</span><h2 class="h2" style="margin-top:4px">Sign in</h2></div>
     <div id="err" class="note login-note" hidden role="alert"></div>
+    <button type="button" class="gbtn" id="gbtn" aria-expanded="false"><svg class="g" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.5l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.4-4.6 7.1l7.5 5.8c4.4-4 6.8-10 6.8-17.4z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.7 24c0-1.6.3-3.1.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continue with Google</button>
+    <div id="gpick" class="stack tight" hidden>
+      <p class="tiny">Demo sign-in: no real Google account is used. Choose an account to continue.</p>
+      <button type="button" class="acct-pick" data-g-email="jordan@steady.demo" data-g-name="Jordan Lee" data-g-dob="2005-03-14"><span class="av"><img src="/assets/img/av07.png" alt=""></span><span><b>Jordan Lee</b><span>jordan@steady.demo · returning member</span></span></button>
+      <button type="button" class="acct-pick" data-g-email="alex.nguyen.demo@gmail.com" data-g-name="Alex Nguyen" data-g-dob="2004-05-06"><span class="av"><img src="/assets/img/av14.png" alt=""></span><span><b>Alex Nguyen</b><span>alex.nguyen.demo@gmail.com · new to Steady</span></span></button>
+      <button type="button" class="acct-pick" id="gother"><span class="av">+</span><span><b>Use another account</b><span>Sign in with an email address instead</span></span></button>
+    </div>
+    <div class="row" style="gap:10px"><span class="divider grow"></span><span class="tiny">or with email</span><span class="divider grow"></span></div>
     <form id="login" novalidate>
       <div class="field"><label for="email">Email</label><input id="email" name="email" class="input" type="email" autocomplete="username" inputmode="email" placeholder="you@example.com" required></div>
       <div class="field"><label for="password">Password</label><div class="pwwrap"><input id="password" name="password" class="input" type="password" autocomplete="current-password" required><button type="button" id="togglepw" aria-label="Show password">Show</button></div></div>
@@ -38,7 +46,7 @@
     <div class="login-foot"><span>NSW pilot concept. Not an emergency service: in an emergency call Triple Zero (000).</span><div class="login-switch"><a href="/host/login">Host app</a><a href="/dashboard/login">Dashboard</a></div></div>
   </section>
 </div>
-<script src="/assets/js/steady-login.js?v=1"></script>
+<script src="/assets/js/steady-login.js?v=3"></script>
 <script>SteadyLogin.init({ app: 'couchsurfer' });</script>
 </body>
 </html>

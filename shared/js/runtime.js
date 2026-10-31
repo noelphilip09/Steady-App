@@ -17,7 +17,7 @@
   function str(v) { return v == null ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v)); }
   function evalAttr(raw, scope, vals) {
     if (typeof raw === 'string') return raw;
-    if (!Array.isArray(raw)) return lookup(raw.$, scope, vals);
+    if (!Array.isArray(raw)) { if (raw == null || raw.$ === undefined) { console.warn('Steady: attribute value is not a string, binding or list', raw); return ''; } return lookup(raw.$, scope, vals); }
     var s = ''; for (var i = 0; i < raw.length; i++) { var p = raw[i]; s += typeof p === 'string' ? p : str(lookup(p.$, scope, vals)); }
     return s;
   }
@@ -118,11 +118,37 @@
     return h('div', { 'class': 'dc-root' }, out);
   };
 
+  /* Slots: a template node {"slot":"name"} is replaced by the partial registered under SteadySite.slots[name]
+     (an array of template nodes authored in JavaScript), so new screens can live in readable code. */
+  function resolveSlots(n, slots, depth) {
+    depth = depth || 0; if (depth > 60 || n == null || typeof n === 'string') return n;
+    if (Array.isArray(n)) {
+      var out = [];
+      for (var i = 0; i < n.length; i++) {
+        var c = n[i];
+        if (c && typeof c === 'object' && !Array.isArray(c) && c.slot !== undefined) {
+          var part = slots[c.slot]; if (part === undefined) { console.warn('Steady: missing slot ' + c.slot); continue; }
+          var isEl = Array.isArray(part) && part.length === 3 && typeof part[0] === 'string' && part[1] && typeof part[1] === 'object' && !Array.isArray(part[1]) && Array.isArray(part[2]);
+          var list = isEl || !Array.isArray(part) ? [part] : part;
+          for (var j = 0; j < list.length; j++) out.push(resolveSlots(list[j], slots, depth + 1));
+        } else out.push(resolveSlots(c, slots, depth + 1));
+      }
+      return out;
+    }
+    if (typeof n === 'object') {
+      if (n.c) { var copy = {}; for (var k in n) copy[k] = k === 'c' ? resolveSlots(n.c, slots, depth + 1) : n[k]; return copy; }
+      return n;
+    }
+    return n;
+  }
+
   global.SteadySite = {
+    slots: {},
     mount: function (opts) {
       opts = opts || {};
       var template = opts.template;
       if (!template) { var tplEl = document.getElementById(opts.templateId || 'tpl'); template = JSON.parse(tplEl.textContent); }
+      template = resolveSlots(template, Object.assign({}, global.SteadySite.slots, opts.slots || {}));
       var Core = global.makeSteadyCore(DCLogic);
       var mode = opts.mode || 'cs';
       class Component extends Core { mode() { return mode; } }

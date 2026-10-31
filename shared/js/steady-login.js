@@ -13,6 +13,24 @@
         b.addEventListener('click', function () { form.email.value = b.getAttribute('data-demo-email'); form.password.value = b.getAttribute('data-demo-password') || ''; form.password.focus(); hide(); });
       });
       var toggle = document.getElementById('togglepw'); if (toggle) toggle.addEventListener('click', function () { var p = form.password; p.type = p.type === 'password' ? 'text' : 'password'; toggle.textContent = p.type === 'password' ? 'Show' : 'Hide'; });
+      var gbtn = document.getElementById('gbtn'); var gpick = document.getElementById('gpick');
+      if (gbtn && gpick) {
+        gbtn.addEventListener('click', function () { var open = gpick.hidden; gpick.hidden = !open; gbtn.setAttribute('aria-expanded', String(open)); });
+        var gother = document.getElementById('gother'); if (gother) gother.addEventListener('click', function () { gpick.hidden = true; form.email.focus(); });
+        gpick.querySelectorAll('[data-g-email]').forEach(function (b) {
+          b.addEventListener('click', function () {
+            hide(); b.disabled = true; b.classList.add('busy');
+            fetch('/api/' + app + '/login', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ provider: 'google', email: b.getAttribute('data-g-email'), name: b.getAttribute('data-g-name'), dob: b.getAttribute('data-g-dob') }) })
+              .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, data: d }; }); })
+              .then(function (r) {
+                if (!r.ok) { b.disabled = false; b.classList.remove('busy'); show(r.data.error || 'Sign-in failed'); return; }
+                var dest = (r.data.me && r.data.me.onboarded === false) ? '/' + app + '/?onboard=1' : next;
+                document.documentElement.classList.add('leaving'); setTimeout(function () { location.href = dest; }, 220);
+              })
+              .catch(function () { b.disabled = false; b.classList.remove('busy'); show('Could not reach the server. Check your connection and try again.'); });
+          });
+        });
+      }
       form.addEventListener('submit', function (e) {
         e.preventDefault(); hide();
         var email = form.email.value.trim(); var password = form.password.value;

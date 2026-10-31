@@ -31,6 +31,7 @@
       global.SteadyLive && global.SteadyLive.configure({ app: app, mode: mode, loginUrl: loginUrl });
 
       var scripts = loadScript('/assets/js/preact.min.js?v=' + cfg.v).then(function () { return loadScript('/assets/js/core.js?v=' + cfg.v); }).then(function () { return loadScript('/assets/js/runtime.js?v=' + cfg.v); }).then(function () { return loadScript('/assets/js/steady-live.js?v=' + cfg.v); });
+      (cfg.extraScripts || []).forEach(function (src) { scripts = scripts.then(function () { return loadScript(src + '?v=' + cfg.v); }); });
       var template = fetch(cfg.template + '?v=' + cfg.v, { credentials: 'same-origin' }).then(function (r) { if (!r.ok) throw new Error('template ' + r.status); return r.json(); });
       var session = getJson('/api/' + app + '/me').then(function (r) {
         if (r.status === 401 || !r.data || !r.data.me) {
@@ -42,6 +43,7 @@
 
       Promise.all([scripts, template, session, minDelay(cfg.minSkeletonMs || 350)]).then(function (res) {
         var tpl = res[1], sess = res[2]; var me = sess.me, state = sess.state;
+        if (me && me.onboarded === false && (mode === 'cs' || mode === 'host')) wantsOnboard = true;
         global.SteadyLive.configure({ app: app, mode: mode, loginUrl: loginUrl });
         var saved = null; try { saved = JSON.parse(sessionStorage.getItem('steady.' + app + '.ui') || 'null'); } catch (e) {}
         var logic = global.SteadySite.mount({

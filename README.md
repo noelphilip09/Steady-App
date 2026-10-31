@@ -60,6 +60,17 @@ All use the password `steady-demo` unless `STEADY_DEMO_PASSWORD` is set.
 
 New couch surfer and host accounts are created inside each app's onboarding ("I'm new: create an account" / "Become a host"). Dashboard accounts are provisioned with `npm run users`.
 
+## The Couch Surfer journey
+
+- **Six-screen onboarding.** Account (demo Google sign-in first, email as the alternative), mobile number with a simulated code you can skip, your situation as picture cards, an optional emergency contact, where you would like to stay (two cards per row), and study: where you are up to, whether you are interested, and which pathway appeals. Name and date of birth are taken from the Google profile; the email path asks for them. Identity verification moved to Housing goals.
+- **Search-first home.** The stay search sits at the top, results open on their own page, and three sections follow: Housing goals, Education goals and Milestones, plus quick links to the Rental Passport, Savings, Pathways and Help.
+- **Weekly contribution and savings.** For every week of a stay the program contributes A$50: A$30 to Steady's service, A$20 to the member's own savings. The Savings screen shows the available balance, total saved, each week's split, redemptions, and two actions: redeem (simulated bank transfer) and emergency assistance (expedited access plus a support-agency referral). Nothing is charged to members; the request flow, agreement, host app and dashboard all describe the same split, and the dashboard reports Steady's A$30 share separately from the A$20 credited to participants.
+- **Rental Passport.** A header card with a reliability indicator (verified stays, references, host ratings, issues resolved, checkouts), stat tiles, one-tap sharing, and the existing stays, references, milestones and share tabs.
+- **Education.** Courses (TAFE, university pathway, short courses) with requirements, where they lead, short simulated videos and preparation tasks. Each course moves through five stages: explore, watch, prepare, ready, connect with Steady. Readiness and adviser requests become passport milestones.
+- **Milestones.** Twelve achievements across housing, savings and learning, an independence ring and a timeline of recorded events.
+
+The demo Google sign-in is simulated (an in-app account picker); production would use Google's own sign-in and receive name, email and date of birth with consent.
+
 ## How it is built
 
 ```

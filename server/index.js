@@ -18,6 +18,7 @@ const DATA_DIR = process.env.STEADY_DATA_DIR || path.join(__dirname, 'data');
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || '0.0.0.0';
 const DEMO_PASSWORD = process.env.STEADY_DEMO_PASSWORD || 'steady-demo';
+const PROD = process.env.NODE_ENV === 'production'; // long-lived caching for versioned assets only in production
 const VERSION = (() => { try { return require(path.join(ROOT, 'package.json')).version; } catch (e) { return '0'; } })();
 
 const APPS = {
@@ -53,13 +54,19 @@ function ensureDemoAccounts() {
   for (const d of DEMO_ACCOUNTS) {
     if (accounts.some(a => a.app === d.app && a.email === d.email)) continue;
     const { salt, hash } = auth.hashPassword(DEMO_PASSWORD);
-    accounts.push(Object.assign({ id: 'acc_' + crypto.randomBytes(6).toString('hex'), createdAt: Date.now(), demo: true, salt, hash }, d));
+    accounts.push(Object.assign({ id: 'acc_' + crypto.randomBytes(6).toString('hex'), createdAt: Date.now(), demo: true, onboarded: true, provider: 'email', salt, hash }, d));
     changed = true;
   }
   if (changed) accountsFile.save({ accounts });
 }
 ensureDemoAccounts();
-{ const keys = core.ensureRecords(state.db, accounts); if (keys.length || seededNow) { state.rev++; state.updatedAt = Date.now(); stateFile.save(state); } }
+{
+  const seed = core.seedDb(); let migrated = 0;
+  for (const k in seed) { if (!(k in state.db)) { state.db[k] = seed[k]; migrated++; } }
+  if (state.db.assumptions && seed.assumptions) { for (const k in seed.assumptions) { if (!(k in state.db.assumptions)) { state.db.assumptions = Object.assign({}, state.db.assumptions, { [k]: seed.assumptions[k] }); migrated++; } } }
+  const keys = core.ensureRecords(state.db, accounts);
+  if (keys.length || seededNow || migrated) { state.rev++; state.updatedAt = Date.now(); stateFile.save(state); if (migrated) console.log('[steady] dataset migrated: ' + migrated + ' new field(s)'); }
+}
 
 function saveState(immediate) { state.updatedAt = Date.now(); stateFile.save(state, immediate ? 0 : 400); }
 
@@ -117,8 +124,9 @@ function readBody(req, limit) {
   });
 }
 function publicAccount(a) {
-  const me = { id: a.id, app: a.app, email: a.email, name: a.name, demo: !!a.demo };
+  const me = { id: a.id, app: a.app, email: a.email, name: a.name, demo: !!a.demo, onboarded: a.onboarded !== false, provider: a.provider || 'email' };
   if (a.participantId) me.participantId = a.participantId; if (a.hostId) me.hostId = a.hostId; if (a.role) me.role = a.role;
+  if (a.profile) me.profile = a.profile;
   return me;
 }
 function sessionAccount(req, app) {
@@ -132,6 +140,18 @@ function sameOrigin(req) {
 }
 function clientIp(req) { return String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim(); }
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+function createAccount(app, fields) {
+  const { salt, hash } = auth.hashPassword(fields.password || crypto.randomBytes(24).toString('hex'));
+  const a = { id: 'acc_' + crypto.randomBytes(6).toString('hex'), app, email: fields.email, name: fields.name || (app === 'host' ? 'New host' : 'New member'), createdAt: Date.now(), demo: false, onboarded: false, provider: fields.provider || 'email', salt, hash };
+  if (fields.profile) a.profile = fields.profile;
+  if (app === 'couchsurfer') { a.participantId = 'p_' + crypto.randomBytes(5).toString('hex'); state.db.participants = state.db.participants.concat([core.newParticipant(a.participantId, { name: a.name, email: a.email, provider: a.provider, phone: fields.phone }, core.today())]); }
+  if (app === 'host') { a.hostId = 'h_' + crypto.randomBytes(5).toString('hex'); a.phone = String(fields.phone || '').slice(0, 40); state.db.hosts = state.db.hosts.concat([core.newHost(a.hostId, { name: a.name, email: a.email, phone: a.phone }, core.today())]); }
+  accounts.push(a); accountsFile.save({ accounts });
+  state.rev++; saveState(false);
+  broadcast('patch', { rev: state.rev, origin: 'server', db: app === 'host' ? { hosts: state.db.hosts } : { participants: state.db.participants } });
+  return a;
+}
 
 /* ---------------- API ---------------- */
 async function handleApi(req, res, u) {
@@ -147,6 +167,19 @@ async function handleApi(req, res, u) {
     const body = await readBody(req, 64e3) || {}; const email = String(body.email || '').trim().toLowerCase(); const password = String(body.password || '');
     const key = clientIp(req) + '|' + email;
     if (!loginLimiter.check(key)) return json(res, 429, { error: 'Too many attempts. Try again in 15 minutes.' });
+    if (body.provider === 'google') {
+      // Demo identity provider: no real OAuth. The sign-in page and onboarding present a simulated account picker.
+      if (!EMAIL_RE.test(email)) return json(res, 400, { error: 'Enter a valid email address.' });
+      let a = accounts.find(x => x.app === app && x.email === email); let created = false;
+      if (!a) {
+        if (!cfg.register) return json(res, 403, { error: 'Dashboard access is provisioned by the program administrator.' });
+        const profile = { name: String(body.name || '').trim().slice(0, 80), dob: /^\d{4}-\d{2}-\d{2}$/.test(body.dob || '') ? body.dob : '', picture: '' };
+        a = createAccount(app, { email, name: profile.name, provider: 'google', profile }); created = true;
+      } else if (!a.profile && (body.name || body.dob)) { a.profile = { name: String(body.name || '').trim().slice(0, 80), dob: /^\d{4}-\d{2}-\d{2}$/.test(body.dob || '') ? body.dob : '' }; accountsFile.save({ accounts }); }
+      loginLimiter.reset(key);
+      const token = sessions.create(app, a.id); auth.setCookie(res, req, cfg.cookie, token, auth.SESSION_DAYS * 86400);
+      return json(res, created ? 201 : 200, { me: publicAccount(a), created });
+    }
     const a = accounts.find(x => x.app === app && x.email === email);
     if (!a || !auth.verifyPassword(password, a.salt, a.hash)) return json(res, 401, { error: 'That email and password don’t match a ' + cfg.title + ' account.' });
     loginLimiter.reset(key);
@@ -159,13 +192,7 @@ async function handleApi(req, res, u) {
     if (!EMAIL_RE.test(email)) return json(res, 400, { error: 'Enter a valid email address.' });
     if (password.length < 8) return json(res, 400, { error: 'Use a password of at least 8 characters.' });
     if (accounts.some(x => x.app === app && x.email === email)) return json(res, 409, { error: 'An account with this email already exists. Sign in instead.' });
-    const { salt, hash } = auth.hashPassword(password);
-    const a = { id: 'acc_' + crypto.randomBytes(6).toString('hex'), app, email, name: name || (app === 'host' ? 'New host' : 'New member'), createdAt: Date.now(), demo: false, salt, hash };
-    if (app === 'couchsurfer') { a.participantId = 'p_' + crypto.randomBytes(5).toString('hex'); state.db.participants = state.db.participants.concat([core.newParticipant(a.participantId, { name: a.name, email }, core.today())]); }
-    if (app === 'host') { a.hostId = 'h_' + crypto.randomBytes(5).toString('hex'); a.phone = String(body.phone || '').slice(0, 40); state.db.hosts = state.db.hosts.concat([core.newHost(a.hostId, { name: a.name, email, phone: a.phone }, core.today())]); }
-    accounts.push(a); accountsFile.save({ accounts });
-    state.rev++; saveState(false);
-    broadcast('patch', { rev: state.rev, origin: 'server', db: app === 'host' ? { hosts: state.db.hosts } : { participants: state.db.participants } });
+    const a = createAccount(app, { email, password, name, phone: body.phone, provider: 'email' });
     const token = sessions.create(app, a.id); auth.setCookie(res, req, cfg.cookie, token, auth.SESSION_DAYS * 86400);
     return json(res, 201, { me: publicAccount(a) });
   }
@@ -181,7 +208,11 @@ async function handleApi(req, res, u) {
 
   if (rest === 'me' && method === 'GET') return json(res, 200, { me: publicAccount(me) });
   if (rest === 'me' && method === 'PATCH') {
-    const body = await readBody(req, 16e3) || {}; if (typeof body.name === 'string' && body.name.trim()) { me.name = body.name.trim().slice(0, 80); accountsFile.save({ accounts }); }
+    const body = await readBody(req, 16e3) || {}; let changed = false;
+    if (typeof body.name === 'string' && body.name.trim()) { me.name = body.name.trim().slice(0, 80); changed = true; }
+    if (typeof body.onboarded === 'boolean') { me.onboarded = body.onboarded; changed = true; }
+    if (body.profile && typeof body.profile === 'object') { me.profile = Object.assign({}, me.profile || {}, { name: String(body.profile.name || (me.profile || {}).name || '').slice(0, 80), dob: /^\d{4}-\d{2}-\d{2}$/.test(body.profile.dob || '') ? body.profile.dob : ((me.profile || {}).dob || '') }); changed = true; }
+    if (changed) accountsFile.save({ accounts });
     return json(res, 200, { me: publicAccount(me) });
   }
   if (rest === 'state' && method === 'GET') {
@@ -239,7 +270,7 @@ const server = http.createServer(async (req, res) => {
     if (p.startsWith('/assets/')) {
       const abs = safeJoin(SHARED_DIR, decodeURIComponent(p.slice('/assets/'.length))); if (!abs) return notFound(res);
       const img = /\.(png|jpg|svg|ico|woff2)$/i.test(abs);
-      return serveFile(req, res, abs, img ? 'public, max-age=604800' : (u.searchParams.has('v') ? 'public, max-age=31536000, immutable' : 'no-cache'));
+      return serveFile(req, res, abs, img ? 'public, max-age=604800' : (u.searchParams.has('v') && PROD ? 'public, max-age=31536000, immutable' : 'no-cache'));
     }
     if (p === '/' || p === '/index.html') return serveFile(req, res, path.join(APPS_DIR, 'landing', 'index.html'), 'no-cache');
     if (p === '/government' || p.startsWith('/government/')) return redirect(res, '/dashboard' + p.slice('/government'.length) + u.search, 301);
@@ -259,7 +290,7 @@ const server = http.createServer(async (req, res) => {
       }
       if (rest === '/' || rest === '/index.html') { if (!appGate(req, res, u, app)) return; return serveFile(req, res, path.join(APPS_DIR, app, 'index.html'), 'no-cache'); }
       const abs = safeJoin(path.join(APPS_DIR, app), decodeURIComponent(rest.slice(1))); if (!abs) return notFound(res);
-      return serveFile(req, res, abs, /\.json$/.test(abs) ? (u.searchParams.has('v') ? 'public, max-age=31536000, immutable' : 'no-cache') : 'no-cache');
+      return serveFile(req, res, abs, /\.json$/.test(abs) ? (u.searchParams.has('v') && PROD ? 'public, max-age=31536000, immutable' : 'no-cache') : 'no-cache');
     }
     return notFound(res);
   } catch (e) {
