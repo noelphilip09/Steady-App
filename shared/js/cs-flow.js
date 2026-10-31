@@ -147,19 +147,26 @@
     P.submitRequest = function () {
       var self = this; var before = this.myRequests().length; var r = _submitRequest.apply(this, arguments);
       if (this.mode() !== 'cs') return r;
-      this.later(function () { if (self.myRequests().length <= before) return; var reqs = self.myRequests().filter(function (x) { return x.status === 'pending'; }).sort(function (a, b) { return b.at - a.at; }); if (reqs.length) self.autoAccept(reqs[0].id); }, 1100 + 3000);
+      this.later(function () { if (self.myRequests().length <= before) return; var reqs = self.myRequests().filter(function (x) { return x.status === 'pending'; }).sort(function (a, b) { return b.at - a.at; }); if (reqs.length) self.autoAccept(reqs[0].id); }, 1150);
       return r;
     };
     P.autoAccept = function (id) {
       var self = this; var r = byId(this.state.db.requests, id); if (!r || r.status !== 'pending') return;
       if (this.state.busy) { this.later(function () { self.autoAccept(id); }, 1200); return; }
-      this._muteToast = true;
-      try { this.acceptRequest(id); } catch (e) { this._muteToast = false; console.warn('Steady: auto-accept failed', e); return; }
-      this.later(function () { self._muteToast = false; var st = self.currentStay(); if (st && st.status === 'awaiting_agreement' && st.requestId === id) self.onAccepted(st); }, 1150);
+      this._muteToast = true; var prevRm = this.rm; this.rm = true; // instant: the host side accepts without a simulated delay
+      try { this.acceptRequest(id); } catch (e) { this._muteToast = false; this.rm = prevRm; console.warn('Steady: auto-accept failed', e); return; }
+      this.rm = prevRm;
+      this.later(function () { self._muteToast = false; var st = self.currentStay(); if (st && st.status === 'awaiting_agreement' && st.requestId === id) { self.csGo('home'); self.onAccepted(st); } }, 120);
     };
     P.onAccepted = function (st) {
       var self = this; var l = this.listingOf(st.listingId); var h = this.hostOf(st.hostId); var pid = this.csId(); var at = this.nowMs();
-      this.setDb(function (db) { db.messages = (db.messages || []).concat([{ id: uid('msg'), stayId: st.id, participantId: pid, hostId: st.hostId, from: 'host', text: 'Hi ' + self.csName() + '! Happy to have you from ' + fmtShort(st.start) + '. Message me here any time, and have a read of the house notes before check-in.', at: at, readCs: false, readHost: true }]); });
+      var rules = (l.rules || []).slice(0, 3); var chores = (l.chores || []).slice(0, 2).map(function (c) { return c.name.toLowerCase() + ' (' + c.frequency.toLowerCase() + ')'; });
+      var opening = [
+        'Hi ' + self.csName() + '! Happy to have you from ' + fmtShort(st.start) + '. I\u2019m ' + this.hostLabel(h) + '. Message me here any time.',
+        'A few house rules so there are no surprises: ' + (rules.length ? rules.join('; ') : 'treat the place as your own and let me know if plans change') + '.',
+        'Chores are light: ' + (chores.length ? chores.join(' and ') : 'just keep shared spaces tidy') + '. ' + (l.noise ? 'Quiet hours: ' + l.noise.toLowerCase() + '. ' : '') + 'Check-in is from 4pm on ' + fmtDate(st.start) + '; text me when you\u2019re ten minutes away.'
+      ];
+      this.setDb(function (db) { db.messages = (db.messages || []).concat(opening.map(function (text, i) { return { id: uid('msg'), stayId: st.id, participantId: pid, hostId: st.hostId, from: 'host', text: text, at: at + i * 1000, readCs: false, readHost: true }; })); });
       this.toast('success', this.hostLabel(h) + ' accepted your request for ' + l.title + '.');
       this.openAcceptedSummary();
     };
@@ -199,7 +206,7 @@
     P.rvCommon = function () {
       var out = _rvCommon.call(this); var self = this; var cur = out.cur; if (!cur) return out;
       var ps = this.payState();
-      Object.assign(cur, { payDue: !!ps && !ps.paid && !ps.expired, paid: !!ps && ps.paid, payExpired: !!ps && ps.expired, payLeft: ps ? fmtLeft(ps.left) : '', payPct: ps ? ps.pct : 0, payUrgent: !!ps && ps.left < 2 * HOUR, payTimerCls: ps && ps.left < 2 * HOUR ? 'urgent' : '', payDueLabel: ps ? fmtDT(ps.due) : '', payNow: function () { self.openPay(); }, openSummary: function () { self.openAcceptedSummary(); }, paidLabel: ps && ps.payment ? 'Paid ' + fmtDT(ps.payment.at) + ' · ' + ps.payment.method : '' });
+      Object.assign(cur, { payDue: !!ps && !ps.paid && !ps.expired, paid: !!ps && ps.paid, payExpired: !!ps && ps.expired, payLeft: ps ? fmtLeft(ps.left) : '', payPct: ps ? ps.pct : 0, payUrgent: !!ps && ps.left < 2 * HOUR, payTimerCls: ps && ps.left < 2 * HOUR ? 'urgent' : '', payDueLabel: ps ? fmtDT(ps.due) : '', payLeftLabel: ps ? (Math.floor(Math.max(0, ps.left) / HOUR) + ' hours ' + Math.floor((Math.max(0, ps.left) % HOUR) / 60000) + ' minutes left to pay the first week') : '', payNow: function () { self.openPay(); }, openSummary: function () { self.openAcceptedSummary(); }, paidLabel: ps && ps.payment ? 'Paid ' + fmtDT(ps.payment.at) + ' · ' + ps.payment.method : '' });
       return out;
     };
     var _rvCs = P.rvCs;
@@ -244,10 +251,11 @@
           { n: '5', label: 'Checkout and feedback', hint: 'A verified stay and a reference in your Passport', cls: '' }
         ],
         rules: (l.rules || []).slice(0, 4).map(function (x) { return { text: x }; }), rulesMore: Math.max(0, (l.rules || []).length - 4), chores: (l.chores || []).slice(0, 3).map(function (c) { return { text: c.name + ' · ' + c.frequency }; }), noise: l.noise || '', guests: l.guests || '',
-        paid: paid, pay: function () { self.openPay(); }, chat: function () { self.openChat(); }, later: function () { self.setState({ modal: null }); } } : { steps: [], rules: [], chores: [] };
+        paid: paid, unpaid: !paid, pay: function () { self.openPay(); }, chat: function () { self.openChat(); }, later: function () { self.setState({ modal: null }); } } : { steps: [], rules: [], chores: [], paid: false, unpaid: false, pay: function () {}, chat: function () {}, later: function () { self.setState({ modal: null }); } };
       r.M.isChat = !!(m && m.kind === 'chat');
       var cst = this.chatStay(); var thread = cst ? this.chatThread(cst) : [];
-      r.M.chat = { hostName: cst ? this.hostLabel(this.hostOf(cst.hostId)) : '', hostAvatar: cst ? avatarOf(this.hostOf(cst.hostId)) : pic('av01'), messages: thread.map(function (x) { return { id: x.id, cls: x.from === 'cs' ? 'cs' : 'host', text: x.text, when: fmtDT(x.at) }; }), empty: thread.length === 0, typing: !!cs.chatTyping, send: function () { self.sendChat(); }, canSend: !!(f.chat_text || '').trim(), cannotSend: !(f.chat_text || '').trim(), keyDown: function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); self.sendChat(); } } };
+      var quick = ['What time can I check in?', 'What are the house rules?', 'Anything I should bring?', 'Is there Wi-Fi and a desk?'].map(function (q) { return { label: q, send: function () { self.setForms({ chat_text: q }); self.later(function () { self.sendChat(); }, 30); } }; });
+      r.M.chat = { hostName: cst ? this.hostLabel(this.hostOf(cst.hostId)) : '', hostAvatar: cst ? avatarOf(this.hostOf(cst.hostId)) : pic('av01'), messages: thread.map(function (x) { return { id: x.id, cls: x.from === 'cs' ? 'cs' : 'host', text: x.text, when: fmtDT(x.at) }; }), empty: thread.length === 0, typing: !!cs.chatTyping, send: function () { self.sendChat(); }, canSend: !!(f.chat_text || '').trim(), cannotSend: !(f.chat_text || '').trim(), keyDown: function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); self.sendChat(); } }, quick: quick, hasQuick: thread.filter(function (x) { return x.from === 'cs'; }).length < 3 };
       return r;
     };
     return Core;

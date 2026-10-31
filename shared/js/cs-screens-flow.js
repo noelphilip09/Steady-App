@@ -30,7 +30,7 @@
     el('div', { 'class': 'row between' }, el('span', { 'class': 'eyebrow' }, 'Request accepted'), el('span', { 'class': 'badge approved' }, 'Accepted')),
     el('div', { 'class': 'h3' }, v('cur.hostName'), ' accepted your request for ', v('cur.title')),
     el('div', { 'class': 'kv' }, el('span', {}, 'Dates'), el('b', {}, v('cur.startLabel'), ' → ', v('cur.endLabel'), ' (', v('cur.nights'), ' nights)')),
-    iff('cur.payDue', el('div', { 'class': ['timer ', v('cur.payTimerCls')] }, el('div', {}, el('div', { 'class': 'clock' }, v('cur.payLeft')), el('div', { 'class': 'lab' }, 'to pay your first week')), el('div', { 'class': 'grow stack tight', style: 'gap: 6px' }, el('div', { 'class': 'small ink strong' }, 'A$50 secures the room'), el('div', { 'class': 'tiny' }, 'A$30 Steady service fee · A$20 into your savings'), el('div', { 'class': 'bar amber thin' }, el('i', { style: ['width: ', v('cur.payPct'), '%'] })))),
+    iff('cur.payDue', el('div', { 'class': ['timer ', v('cur.payTimerCls')] }, el('div', {}, el('div', { 'class': 'clock', role: 'timer', 'aria-label': v('cur.payLeftLabel') }, v('cur.payLeft')), el('div', { 'class': 'lab' }, 'to pay your first week')), el('div', { 'class': 'grow stack tight', style: 'gap: 6px' }, el('div', { 'class': 'small ink strong' }, 'A$50 secures the room'), el('div', { 'class': 'tiny' }, 'A$30 Steady service fee · A$20 into your savings'), el('div', { 'class': 'bar amber thin' }, el('i', { style: ['width: ', v('cur.payPct'), '%'] })))),
       el('button', { 'class': 'btn primary block lg', onClick: v('cur.payNow') }, 'Pay A$50 now'),
       el('p', { 'class': 'tiny' }, 'Unpaid after ', v('cur.payDueLabel'), ' the room is released to others.')),
     iff('cur.paid',
@@ -80,6 +80,7 @@
         iff('M.chat.empty', el('div', { 'class': 'msg sys' }, 'Say hello to ', v('M.chat.hostName'), '. They usually reply within a few minutes.')),
         each('M.chat.messages', 'm', el('div', { 'class': ['msg ', v('m.cls')] }, v('m.text'), el('span', { 'class': 'when' }, v('m.when')))),
         iff('M.chat.typing', el('div', { 'class': 'typing' }, el('i', {}), el('i', {}), el('i', {})))),
+      iff('M.chat.hasQuick', el('div', { 'class': 'chips' }, each('M.chat.quick', 'q', el('button', { 'class': 'chip', onClick: v('q.send') }, v('q.label'))))),
       el('div', { 'class': 'chatbar' }, el('input', { 'class': 'input', name: 'chat_text', placeholder: 'Write a message…', value: v('f.chat_text'), onChange: v('onField'), onKeyDown: v('M.chat.keyDown'), 'aria-label': 'Message' }), el('button', { 'class': 'send', onClick: v('M.chat.send'), 'aria-label': 'Send', disabled: v('M.chat.cannotSend') }, icon('fwd', 20))),
       el('p', { 'class': 'tiny' }, 'Messages are kept with your stay record. For emergencies call Triple Zero (000); for safety concerns use Help.'))));
   S.slots.csModals.c.push(modals);

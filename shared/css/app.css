@@ -309,3 +309,6 @@ html.leaving .login-hero{animation:fadeOut .22s var(--ease) both}
 .goal-row{grid-template-columns:repeat(2,minmax(0,1fr))}
 .goal .ic.save{background:var(--amber-fill)}
 .pick-grid.three{grid-template-columns:repeat(2,minmax(0,1fr))}
+
+/* chart data points are labelled images, not buttons */
+.bars .col [role=img]{position:absolute;inset:0}
