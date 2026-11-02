@@ -53,9 +53,10 @@ function ensureDemoAccounts() {
   let changed = false;
   for (const d of DEMO_ACCOUNTS) {
     const existing = accounts.find(a => a.app === d.app && a.email === d.email);
-    if (existing) { if (!!existing.reonboardOnLogout !== !!d.reonboardOnLogout) { existing.reonboardOnLogout = !!d.reonboardOnLogout; changed = true; } continue; }
+    if (existing) { if (!!existing.reonboardOnLogout !== !!d.reonboardOnLogout) { existing.reonboardOnLogout = !!d.reonboardOnLogout; if (d.reonboardOnLogout) existing.onboarded = false; changed = true; } continue; }
     const { salt, hash } = auth.hashPassword(DEMO_PASSWORD);
-    accounts.push(Object.assign({ id: 'acc_' + crypto.randomBytes(6).toString('hex'), createdAt: Date.now(), demo: true, onboarded: true, provider: 'email', salt, hash }, d));
+    // Walkthrough accounts start at onboarding from their very first sign-in (fresh seeds included), not only after a sign-out.
+    accounts.push(Object.assign({ id: 'acc_' + crypto.randomBytes(6).toString('hex'), createdAt: Date.now(), demo: true, onboarded: !d.reonboardOnLogout, provider: 'email', salt, hash }, d));
     changed = true;
   }
   if (changed) accountsFile.save({ accounts });
