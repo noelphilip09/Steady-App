@@ -50,7 +50,7 @@ All use the password `steady-demo` unless `STEADY_DEMO_PASSWORD` is set.
 | App | Email | Notes |
 | --- | --- | --- |
 | Couch Surfer | `jordan@steady.demo` | Returning member with a verified stay and an active membership |
-| Couch Surfer | `sam@steady.demo` | New member; has a request waiting with Priya |
+| Couch Surfer | `sam@steady.demo` | Walkthrough profile: signing out resets the account to onboarding, so every sign-in starts from the first step (the server flags it with `reonboardOnLogout`) |
 | Couch Surfer | `mia@steady.demo` | Completed a stay and moved to a private rental |
 | Host | `priya@steady.demo` | Approved host in Marrickville with one pending request |
 | Host | `marcus@steady.demo` | Approved host in Glebe |

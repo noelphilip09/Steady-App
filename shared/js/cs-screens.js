@@ -306,7 +306,8 @@
       moreBtn('csGoProfile', 'Profile and privacy'),
       moreBtn('csGoNotifications', 'Notifications', el('span', { 'class': 'small' }, v('csUnread'), ' unread')),
       moreBtn('csStartOnboarding', 'Update my profile', el('span', { 'class': 'small' }, '6 quick steps')),
-      moreBtn('signOut', 'Sign out', el('span', { 'class': 'small' }, v('meEmail'))))));
+      moreBtn('signOut', 'Sign out', el('span', { 'class': 'small' }, v('meEmail')))),
+      iff('meReonboards', el('p', { 'class': 'tiny', 'style': 'padding:8px 4px 0' }, 'Walkthrough profile: signing out starts the next sign-in from onboarding again.'))));
   var tabBtn = function (key, action, label, iconName) { return el('button', { 'class': ['tab-item ', v('csTab.' + key)], onClick: v(action), 'aria-label': label }, icon(iconName, 22), el('span', {}, label)); };
   S.slots.csTabbar = el('nav', { 'class': 'tabbar', 'aria-label': 'Main' }, tabBtn('home', 'csGoHome', 'Home', 'home'), tabBtn('stay', 'csGoStay', 'Stay', 'bed'), tabBtn('passport', 'csGoPassport', 'Passport', 'passport'), tabBtn('learn', 'csGoEducation', 'Learn', 'learn'), tabBtn('more', 'csGoMore', 'More', 'more'));
 

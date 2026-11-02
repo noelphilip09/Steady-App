@@ -165,7 +165,7 @@
     var _rvCommon = P.rvCommon;
     P.rvCommon = function () {
       var out = _rvCommon.call(this); var me = this.state.me; var live = this.state.live || {}; var st = live.status || 'idle';
-      out.meEmail = me ? me.email : ''; out.meName = me ? me.name : ''; out.isGuest = !me; out.signOut = function () { Live.signOut(); };
+      out.meEmail = me ? me.email : ''; out.meName = me ? me.name : ''; out.isGuest = !me; out.meReonboards = !!(me && me.reonboardOnLogout); out.signOut = function () { Live.signOut(); };
       out.liveStatus = st === 'live' ? 'Live' : st === 'syncing' ? 'Saving…' : st === 'reconnecting' ? 'Reconnecting…' : st === 'offline' ? 'Offline' : me ? 'Connecting…' : 'Not signed in';
       out.liveCls = st; out.liveBadgeCls = st === 'live' ? 'verified' : st === 'syncing' ? 'info' : st === 'idle' ? 'neutral' : 'review';
       out.gCanSwitchRole = !!(me && me.role === 'admin'); out.gLoadingCls = this.state.gov && this.state.gov.loading ? 'loading' : '';

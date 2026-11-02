@@ -28,7 +28,7 @@ const APPS = {
 };
 const DEMO_ACCOUNTS = [
   { app: 'couchsurfer', email: 'jordan@steady.demo', name: 'Jordan Lee', participantId: 'p_jordan' },
-  { app: 'couchsurfer', email: 'sam@steady.demo', name: 'Sam Rivera', participantId: 'p_sam' },
+  { app: 'couchsurfer', email: 'sam@steady.demo', name: 'Sam Rivera', participantId: 'p_sam', reonboardOnLogout: true }, // demo walkthrough account: signing out sends the next sign-in back through onboarding
   { app: 'couchsurfer', email: 'mia@steady.demo', name: 'Mia Okonkwo', participantId: 'p_mia' },
   { app: 'host', email: 'priya@steady.demo', name: 'Priya Natarajan', hostId: 'h_priya' },
   { app: 'host', email: 'marcus@steady.demo', name: 'Marcus Tran', hostId: 'h_marcus' },
@@ -52,7 +52,8 @@ const DB_SHAPE = (() => { const seed = core.seedDb(); const shape = {}; for (con
 function ensureDemoAccounts() {
   let changed = false;
   for (const d of DEMO_ACCOUNTS) {
-    if (accounts.some(a => a.app === d.app && a.email === d.email)) continue;
+    const existing = accounts.find(a => a.app === d.app && a.email === d.email);
+    if (existing) { if (!!existing.reonboardOnLogout !== !!d.reonboardOnLogout) { existing.reonboardOnLogout = !!d.reonboardOnLogout; changed = true; } continue; }
     const { salt, hash } = auth.hashPassword(DEMO_PASSWORD);
     accounts.push(Object.assign({ id: 'acc_' + crypto.randomBytes(6).toString('hex'), createdAt: Date.now(), demo: true, onboarded: true, provider: 'email', salt, hash }, d));
     changed = true;
@@ -127,6 +128,7 @@ function publicAccount(a) {
   const me = { id: a.id, app: a.app, email: a.email, name: a.name, demo: !!a.demo, onboarded: a.onboarded !== false, provider: a.provider || 'email' };
   if (a.participantId) me.participantId = a.participantId; if (a.hostId) me.hostId = a.hostId; if (a.role) me.role = a.role;
   if (a.profile) me.profile = a.profile;
+  if (a.reonboardOnLogout) me.reonboardOnLogout = true;
   return me;
 }
 function sessionAccount(req, app) {
@@ -197,7 +199,12 @@ async function handleApi(req, res, u) {
     return json(res, 201, { me: publicAccount(a) });
   }
   if (rest === 'logout' && method === 'POST') {
-    const sa = sessionAccount(req, app); if (sa) sessions.destroy(sa.token);
+    const sa = sessionAccount(req, app);
+    if (sa) {
+      sessions.destroy(sa.token);
+      // Walkthrough accounts (Sam) start from onboarding again on their next sign-in.
+      if (sa.account.reonboardOnLogout && sa.account.onboarded !== false) { sa.account.onboarded = false; accountsFile.save({ accounts }); }
+    }
     auth.setCookie(res, req, cfg.cookie, '', 0); return send(res, 204, '', { 'Cache-Control': 'no-store' });
   }
 
