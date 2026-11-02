@@ -9,24 +9,18 @@
     var IMG = H.IMG, money = H.money, fmtDate = H.fmtDate, fmtShort = H.fmtShort, fmtDT = H.fmtDT, uid = H.uid, byId = H.byId, upd = H.upd, clamp = H.clamp, avatarOf = H.avatarOf;
     var pic = function (n) { return (n && IMG[n]) || ('/assets/img/' + n + '.png'); };
     var HOUR = 36e5, PAY_WINDOW = 24 * HOUR;
-    var STOCK = [
-      { name: 'Taylor Morgan', email: 'taylor.morgan.demo@gmail.com', dob: '2004-09-12', av: 'av09' }, { name: 'Riley Chen', email: 'riley.chen.demo@gmail.com', dob: '2005-02-03', av: 'av10' },
-      { name: 'Jess Patel', email: 'jess.patel.demo@gmail.com', dob: '2003-11-21', av: 'av11' }, { name: 'Noah Williams', email: 'noah.williams.demo@gmail.com', dob: '2006-04-18', av: 'av13' },
-      { name: 'Ava Nguyen', email: 'ava.nguyen.demo@gmail.com', dob: '2004-07-30', av: 'av15' }, { name: 'Kai Thompson', email: 'kai.thompson.demo@gmail.com', dob: '2005-12-09', av: 'av16' }
+    // Simulated Google accounts offered everywhere Google sign-in appears: Sam (the walkthrough profile) and Ava (a regular member).
+    var PROFILES = [
+      { name: 'Sam Rivera', email: 'sam@steady.demo', dob: '2003-05-14', av: 'av21', note: 'Walkthrough profile' },
+      { name: 'Ava Nguyen', email: 'ava.nguyen.demo@gmail.com', dob: '2004-07-30', av: 'av15', note: '' }
     ];
+    function profileByEmail(email) { return PROFILES.filter(function (p) { return p.email === email; })[0] || null; }
     var METHODS = [
       { id: 'digital', label: 'Digital ID', sub: 'Verify through a connected digital identity provider. About a minute.', img: 'obj_shield' },
       { id: 'scan', label: 'Scan an ID document', sub: 'Driver licence, passport or photo card, with your camera.', img: 'obj_passport' },
       { id: 'support', label: 'A support worker verifies me', sub: 'If digital verification isn’t accessible for you.', img: 'ill_support' }
     ];
     var PORTRAITS = ['por_beanie', 'por_hat', 'por_guitar', 'por_cat', 'por_garden'];
-    function stockProfile(fresh) {
-      var key = 'steady.google.stock';
-      try { if (!fresh && typeof localStorage !== 'undefined') { var s = JSON.parse(localStorage.getItem(key) || 'null'); if (s && s.email) return s; } } catch (e) {}
-      var p = STOCK[Math.floor(Math.random() * STOCK.length)];
-      try { if (typeof localStorage !== 'undefined') localStorage.setItem(key, JSON.stringify(p)); } catch (e) {}
-      return p;
-    }
     function fmtLeft(ms) { ms = Math.max(0, ms); var h = Math.floor(ms / HOUR), m = Math.floor((ms % HOUR) / 60000), s = Math.floor((ms % 60000) / 1000); var pad = function (n) { return (n < 10 ? '0' : '') + n; }; return pad(h) + ':' + pad(m) + ':' + pad(s); }
     function portraitFor(id) { var n = 0; String(id).split('').forEach(function (c) { n += c.charCodeAt(0); }); return PORTRAITS[n % PORTRAITS.length]; }
 
@@ -72,12 +66,17 @@
     /* ---------- Google sign-in with a simulated (stock) account ---------- */
     var _ob2Google = P.ob2Google;
     P.ob2Google = function () {
-      var self = this; if (!this.isGuest()) return _ob2Google.call(this);
-      var prof = stockProfile(false);
-      this.setState({ modal: { kind: 'gsign', title: 'Sign in with Google', sub: 'Demo: a simulated Google account. Nothing is sent to Google.' }, cs: Object.assign({}, this.state.cs, { gsign: { name: prof.name, email: prof.email, dob: prof.dob, av: pic(prof.av), status: 'Signing you in…' } }) });
-      this.later(function () { var g = self.state.cs.gsign; var m = self.state.modal; if (!g || !m || m.kind !== 'gsign') return; self.ob2GooglePick({ name: g.name, email: g.email, dob: g.dob }); }, 1500);
+      if (!this.isGuest()) return _ob2Google.call(this);
+      var last = null; try { last = localStorage.getItem('steady.google.profile'); } catch (e) {}
+      this.setState({ modal: { kind: 'gsign', title: 'Choose an account', sub: 'to continue to Steady. Demo: simulated Google accounts, nothing is sent to Google.' }, cs: Object.assign({}, this.state.cs, { gsign: { choosing: true, selected: last } }) });
     };
-    P.gsignSwitch = function () { var prof = stockProfile(true); this.setCs({ gsign: null }); this.setState({ modal: null }); this.toast('info', 'Switched to ' + prof.name + '. Tap Continue with Google again.'); };
+    P.gsignPick = function (email) {
+      var self = this; var prof = profileByEmail(email); if (!prof) return;
+      var cur = this.state.cs.gsign; if ((cur && cur.choosing === false) || this.state.busy) return; // a sign-in is already under way (double tap, key repeat)
+      try { localStorage.setItem('steady.google.profile', prof.email); } catch (e) {}
+      this.setState({ modal: { kind: 'gsign', title: 'Sign in with Google', sub: 'Demo: a simulated Google account. Nothing is sent to Google.' }, cs: Object.assign({}, this.state.cs, { gsign: { choosing: false, name: prof.name, email: prof.email, dob: prof.dob, av: pic(prof.av), status: 'Signing you in…' } }) });
+      this.later(function () { var g = self.state.cs.gsign; var m = self.state.modal; if (!g || g.choosing || !m || m.kind !== 'gsign') return; self.ob2GooglePick({ name: g.name, email: g.email, dob: g.dob }); }, 1400);
+    };
 
     /* ---------- first-week payment window ---------- */
     P.firstPayment = function (st) { return (this.state.db.payments || []).find(function (p) { return p.stayId === st.id && p.kind === 'first-week'; }) || null; };
@@ -238,7 +237,8 @@
       var ss = o.selfieState || 'search';
       r.M.selfie = { cls: ss, label: ss === 'search' ? 'Centre your face in the circle' : ss === 'found' ? 'Hold still…' : 'Looks good', done: ss === 'done', busy: ss !== 'done', use: function () { self.selfieUse(); }, retake: function () { self.selfieRetake(); }, avatar: pic(portraitFor(this.csId())), useAsPhoto: o.useAsPhoto !== false, toggleUse: function () { self.selfieToggleUse(); } };
       r.M.isGsign = !!(m && m.kind === 'gsign'); var g = cs.gsign || {};
-      r.M.gsign = { name: g.name || '', email: g.email || '', av: g.av || pic('av01'), status: g.status || '', switchAccount: function () { self.gsignSwitch(); } };
+      r.M.gsign = { choosing: !!g.choosing, signing: !g.choosing, name: g.name || '', email: g.email || '', av: g.av || pic('av01'), status: g.status || '',
+        profiles: PROFILES.map(function (p) { return { name: p.name, email: p.email, note: p.note, hasNote: !!p.note, av: pic(p.av), pick: function () { self.gsignPick(p.email); } }; }) };
       var ps = this.payState(); var me = this.participant(); var a = this.state.db.assumptions;
       r.M.isPay = !!(m && m.kind === 'pay');
       r.M.pay = { amount: money(a.stayFeeWeek || 50, true), svc: money(a.contributionService || 30, true), sav: money(a.contributionSavings || 20, true), method: me.paymentMethod ? me.paymentMethod.brand + ' •••• ' + me.paymentMethod.last4 : 'No card on file yet', hasMethod: !!me.paymentMethod, noMethod: !me.paymentMethod, addMethod: function () { self.openPayMethod(); }, submit: function () { self.payFirstWeek(); }, busy: !!b.pay, left: ps ? fmtLeft(ps.left) : '', title: ps ? this.listingOf(ps.stay.listingId).title : '' };

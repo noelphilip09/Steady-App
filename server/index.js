@@ -178,7 +178,17 @@ async function handleApi(req, res, u) {
         if (!cfg.register) return json(res, 403, { error: 'Dashboard access is provisioned by the program administrator.' });
         const profile = { name: String(body.name || '').trim().slice(0, 80), dob: /^\d{4}-\d{2}-\d{2}$/.test(body.dob || '') ? body.dob : '', picture: '' };
         a = createAccount(app, { email, name: profile.name, provider: 'google', profile }); created = true;
-      } else if (!a.profile && (body.name || body.dob)) { a.profile = { name: String(body.name || '').trim().slice(0, 80), dob: /^\d{4}-\d{2}-\d{2}$/.test(body.dob || '') ? body.dob : '' }; accountsFile.save({ accounts }); }
+      } else {
+        // An existing account (for example the Sam walkthrough profile) signing in through the simulated Google provider:
+        // remember the method so onboarding takes the Google path, and keep the Google profile details current.
+        let changed = false;
+        if (a.provider !== 'google') { a.provider = 'google'; changed = true; }
+        if (body.name || body.dob) {
+          const prof = Object.assign({}, a.profile || {}, { name: String(body.name || (a.profile || {}).name || a.name || '').trim().slice(0, 80), dob: /^\d{4}-\d{2}-\d{2}$/.test(body.dob || '') ? body.dob : ((a.profile || {}).dob || '') });
+          if (JSON.stringify(prof) !== JSON.stringify(a.profile || {})) { a.profile = prof; changed = true; }
+        }
+        if (changed) accountsFile.save({ accounts });
+      }
       loginLimiter.reset(key);
       const token = sessions.create(app, a.id); auth.setCookie(res, req, cfg.cookie, token, auth.SESSION_DAYS * 86400);
       return json(res, created ? 201 : 200, { me: publicAccount(a), created });
@@ -186,6 +196,7 @@ async function handleApi(req, res, u) {
     const a = accounts.find(x => x.app === app && x.email === email);
     if (!a || !auth.verifyPassword(password, a.salt, a.hash)) return json(res, 401, { error: 'That email and password don’t match a ' + cfg.title + ' account.' });
     loginLimiter.reset(key);
+    if (a.provider !== 'email') { a.provider = 'email'; accountsFile.save({ accounts }); } // signed in with a password this time
     const token = sessions.create(app, a.id); auth.setCookie(res, req, cfg.cookie, token, auth.SESSION_DAYS * 86400);
     return json(res, 200, { me: publicAccount(a) });
   }

@@ -60,8 +60,8 @@ img{max-width:100%}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1.5px solid transparent;border-radius:var(--r-pill);padding:0 20px;min-height:50px;font-weight:700;font-size:15px;line-height:1.2;transition:background var(--t-fast) var(--ease),color var(--t-fast) var(--ease),border-color var(--t-fast) var(--ease),box-shadow var(--t-fast) var(--ease),transform 110ms var(--ease);text-align:center;white-space:nowrap}
 .btn:active{transform:scale(.97)}
 .btn[disabled]{opacity:.5;cursor:not-allowed;transform:none}
-.btn.primary{background:var(--black);color:#fff}
-.btn.primary:hover{background:var(--black-2);box-shadow:0 8px 20px rgba(21,23,28,.22)}
+.btn.primary{background:var(--blue);color:#fff} /* primary actions are the brand blue everywhere */
+.btn.primary:hover{background:var(--blue-dark);box-shadow:0 8px 20px rgba(0,125,181,.28)}
 .btn.secondary{background:var(--fill);color:var(--ink)}
 .btn.secondary:hover{background:var(--fill-2)}
 .btn.outline{background:#fff;border-color:var(--line);color:var(--ink)}

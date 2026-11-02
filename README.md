@@ -58,6 +58,8 @@ All use the password `steady-demo` unless `STEADY_DEMO_PASSWORD` is set.
 | Dashboard | `analyst@steady.demo` | Filters, comparisons, exports |
 | Dashboard | `admin@steady.demo` | Edits assumptions; can view as any role |
 
+The Couch Surfer sign-in page also offers a simulated **Continue with Google**. Pick one of two Google profiles first: **Sam Rivera** (the same walkthrough account as above, so onboarding runs again after every sign-out) or **Ava Nguyen**, a regular member whose account is created on her first Google sign-in. The same two profiles appear in the in-app Google sheet during onboarding. Nothing is sent to Google.
+
 New couch surfer and host accounts are created inside each app's onboarding ("I'm new: create an account" / "Become a host"). Dashboard accounts are provisioned with `npm run users`.
 
 ## The Couch Surfer journey

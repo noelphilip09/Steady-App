@@ -8,8 +8,8 @@
 <link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
-<link rel="stylesheet" href="/assets/css/steady.css?v=9">
-<link rel="stylesheet" href="/assets/css/app.css?v=9">
+<link rel="stylesheet" href="/assets/css/steady.css?v=10">
+<link rel="stylesheet" href="/assets/css/app.css?v=10">
 <meta name="description" content="Sign in to Steady — Couch Surfer.">
 <title>Sign in — Steady Couch Surfer</title>
 </head>
@@ -25,10 +25,14 @@
   <section class="login-card">
     <div><span class="eyebrow">Couch Surfer app</span><h2 class="h2" style="margin-top:4px">Sign in</h2></div>
     <div id="err" class="note login-note" hidden role="alert"></div>
-    <button type="button" class="gbtn" id="gbtn" aria-expanded="false"><svg class="g" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.5l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.4-4.6 7.1l7.5 5.8c4.4-4 6.8-10 6.8-17.4z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.7 24c0-1.6.3-3.1.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>Continue with Google</button>
+    <div id="gchoose" class="gchoose" role="radiogroup" aria-label="Google account to sign in with">
+      <span class="tiny strong">Sign in with Google as</span>
+      <button type="button" class="gprof" role="radio" aria-checked="false" data-g-name="Sam Rivera" data-g-email="sam@steady.demo" data-g-dob="2003-05-14" data-g-av="av21"><img src="/assets/img/av21.png" alt=""><span class="who"><b>Sam Rivera</b><span>sam@steady.demo · walkthrough profile</span></span><span class="gcheck" aria-hidden="true"></span></button>
+      <button type="button" class="gprof" role="radio" aria-checked="false" data-g-name="Ava Nguyen" data-g-email="ava.nguyen.demo@gmail.com" data-g-dob="2004-07-30" data-g-av="av15"><img src="/assets/img/av15.png" alt=""><span class="who"><b>Ava Nguyen</b><span>ava.nguyen.demo@gmail.com</span></span><span class="gcheck" aria-hidden="true"></span></button>
+    </div>
+    <button type="button" class="gbtn" id="gbtn" aria-expanded="false"><svg class="g" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.5l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.3l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.4-4.6 7.1l7.5 5.8c4.4-4 6.8-10 6.8-17.4z"/><path fill="#FBBC05" d="M10.5 28.6A14.5 14.5 0 0 1 9.7 24c0-1.6.3-3.1.8-4.6l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg><span id="gbtnLabel">Continue with Google</span></button>
     <div id="gpick" class="stack tight" hidden>
       <div class="gsign"><span class="av"><img id="gav" src="/assets/img/av01.png" alt=""></span><div><div class="h3" id="gname"></div><div class="small" id="gemail"></div></div><div class="row" style="gap:8px"><span class="spin dark"></span><span class="small strong" id="gstatus">Signing you in…</span></div></div>
-      <button type="button" class="btn ghost sm" id="gother">Not you? Use a different Google account</button>
       <p class="tiny">Demo: a simulated Google account. Nothing is sent to Google.</p>
     </div>
     <div class="row" style="gap:10px"><span class="divider grow"></span><span class="tiny">or with email</span><span class="divider grow"></span></div>
@@ -45,7 +49,7 @@
     <div class="login-foot"><span>NSW pilot concept. Not an emergency service: in an emergency call Triple Zero (000).</span><div class="login-switch"><a href="/host/login">Host app</a><a href="/dashboard/login">Dashboard</a></div></div>
   </section>
 </div>
-<script src="/assets/js/steady-login.js?v=9"></script>
+<script src="/assets/js/steady-login.js?v=10"></script>
 <script>SteadyLogin.init({ app: 'couchsurfer' });</script>
 </body>
 </html>

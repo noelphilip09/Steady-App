@@ -43,11 +43,16 @@
 
   /* ---- modals ---- */
   var modals = group(
-    iff('M.isGsign', el('div', { 'class': 'gsign' },
-      el('span', { 'class': 'av' }, el('img', { src: v('M.gsign.av'), alt: '' })),
-      el('div', {}, el('div', { 'class': 'h3' }, v('M.gsign.name')), el('div', { 'class': 'small' }, v('M.gsign.email'))),
-      el('div', { 'class': 'row', style: 'gap: 8px' }, el('span', { 'class': 'spin dark' }), el('span', { 'class': 'small strong' }, v('M.gsign.status'))),
-      el('button', { 'class': 'btn ghost sm', onClick: v('M.gsign.switchAccount') }, 'Not you? Use a different Google account'))),
+    iff('M.isGsign',
+      iff('M.gsign.choosing', el('div', { 'class': 'gchoose' },
+        each('M.gsign.profiles', 'g', el('button', { 'class': 'gprof', onClick: v('g.pick') },
+          el('img', { src: v('g.av'), alt: '' }),
+          el('span', { 'class': 'who' }, el('b', {}, v('g.name')), el('span', {}, v('g.email'))),
+          iff('g.hasNote', el('span', { 'class': 'badge neutral nodot' }, v('g.note'))))))),
+      iff('M.gsign.signing', el('div', { 'class': 'gsign' },
+        el('span', { 'class': 'av' }, el('img', { src: v('M.gsign.av'), alt: '' })),
+        el('div', {}, el('div', { 'class': 'h3' }, v('M.gsign.name')), el('div', { 'class': 'small' }, v('M.gsign.email'))),
+        el('div', { 'class': 'row', style: 'gap: 8px' }, el('span', { 'class': 'spin dark' }), el('span', { 'class': 'small strong' }, v('M.gsign.status')))))),
     iff('M.isSelfie', el('div', { 'class': 'stack tight' },
       el('div', { 'class': ['selfie ', v('M.selfie.cls')] }, el('img', { src: v('M.selfie.avatar'), alt: '' }), el('span', { 'class': 'face' }), el('span', { 'class': 'sweep' }), el('span', { 'class': 'flash' }), el('span', { 'class': 'st' }, v('M.selfie.label'))),
       iff('M.selfie.done', el('label', { 'class': 'chk big' }, el('input', { type: 'checkbox', checked: v('M.selfie.useAsPhoto'), onChange: v('M.selfie.toggleUse') }), el('span', { 'class': 'box' }, checkSvg()), el('span', {}, 'Use this photo on my profile'))),
